@@ -1,9 +1,8 @@
 %define prefix /opt/kaltura 
-
 Summary: Kaltura Open Source Video Platform 
 Name: kaltura-postinst 
-Version: 1.0.7
-Release: 23 
+Version: 1.0.12
+Release: 21
 License: AGPLv3+
 Group: Server/Platform 
 Source0: %{name}-%{version}.tar.gz
@@ -13,6 +12,7 @@ Source3: sql_updates
 URL: http://kaltura.org
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
+Requires: bc
 
 %description
 Kaltura is the world's first Open Source Online Video Platform, transforming the way people work, 
@@ -35,7 +35,7 @@ This package includes post install scripts to be run post RPM install as they re
 mkdir -p $RPM_BUILD_ROOT/%{prefix}/bin
 mkdir -p $RPM_BUILD_ROOT/%{prefix}/app/configurations $RPM_BUILD_ROOT/%{prefix}/app/deployment/updates/scripts
 chmod +x *.sh 
-mv  *.sh *.rc $RPM_BUILD_ROOT/%{prefix}/bin
+mv  *.sh *.rc *.php *.ini *.xml $RPM_BUILD_ROOT/%{prefix}/bin
 cp %{SOURCE1} $RPM_BUILD_ROOT/%{prefix}/app/configurations
 cp %{SOURCE2} $RPM_BUILD_ROOT%{prefix}/app/configurations/consent_msgs
 cp %{SOURCE3} $RPM_BUILD_ROOT%{prefix}/app/deployment/sql_updates
@@ -58,8 +58,13 @@ if [ "$1" = 2 ];then
 					continue
 				fi
 			fi
-			mysql kaltura -h $DB1_HOST -u $SUPER_USER -P $DB1_PORT -p$SUPER_USER_PASSWD < $SQL
-			RC=$?
+			if [ -r $SQL ];then
+				mysql kaltura -h $DB1_HOST -u $DB1_USER -P $DB1_PORT -p$DB1_PASS < $SQL 2>/dev/null
+				RC=$?
+			else
+				echo "In order to upgrade your DB, please run %{prefix}/bin/kaltura-db-update.sh once the RPMs installation completes."
+				RC=1
+			fi
 		done
 		if [ $RC -eq 0 ];then
 			cat %{prefix}/app/deployment/sql_updates >> %{prefix}/app/deployment/sql_updates.done
@@ -76,6 +81,78 @@ fi
 %config %{prefix}/app/configurations/*
 
 %changelog
+* Sat Apr 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.12-8
+- https://github.com/kaltura/platform-install-packages/issues/99
+
+* Sat Apr 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.12-6
+- [master 1112364] no need for these functions to accept machine as param. They check the services locally.
+
+* Sat Apr 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.12-5
+- No reason to require root previleges for running the alters. 'kaltura' user is capable of it.
+
+* Sun Apr 20 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.11-18
+- Added dwh and delete partner to sanity testing.
+
+* Sat Apr 19 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.11-2
+- In kaltura-front-config.sh - first call kaltura-base-config.sh
+
+* Thu Apr 17 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.11-1
+- Bugs->fixes.
+
+* Wed Apr 9 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.10-8
+- Need to respect USER_CONSENT coming from the ans file.
+
+* Tue Apr 8 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.10-7
+- Added bc to deps. Used in kaltura-sanity.sh
+
+* Tue Apr 8 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.10-2
+- Check if kaltura-base is installed before starting config proc.
+
+* Wed Mar 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.9-8
+- replace html5_version in base.ini to latest.
+
+* Wed Mar 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.9-7
+- The creation of ans file should be called later on.
+
+* Wed Mar 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.9-6
+- Script to setup MySQL replication added.
+
+* Tue Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.9-2
+- To match Core release 9.13.0.
+
+* Sun Mar 23 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.9-1
+- kaltura-sanity.sh's output revised according to Zohar's requests.
+
+* Sat Mar 22 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-19
+- kaltura-sanity.sh is operational.
+
+* Thu Mar 20 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-18
+- kaltura-front-config.sh - we can't use rpm -q kaltura-kmc because this node may not be the one where we installed the KMC RPM on, as it resides in the web dir and does not need to be installed on all front nodes.
+
+* Thu Mar 20 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-16
+- disable ERR trap when checking if kalturadw tables exist.
+
+* Mon Mar 17 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-11
+- Colors && shit..
+
+* Mon Mar 17 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-10
+- Color corrections
+- Do not sed on php INIs where they are not present [DWH, Sphinx].
+- Suggest to drop the DB if it exists and db-config is run.
+
+* Mon Mar 17 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-7
+- Colorful output to make err detection easy.
+
+* Thu Mar 13 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-3
+- Random monit passwd.
+
+* Thu Mar 13 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-2
+- Modified message in drop-db.sh
+
+* Thu Mar 13 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.8-1
+- Modified mail template a little.
+- Added script to configure NFS client side.
+
 * Tue Mar 9 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 1.0.7-23
 - '"' around CONSENT.
 

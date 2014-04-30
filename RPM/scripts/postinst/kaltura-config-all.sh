@@ -1,7 +1,7 @@
 #!/bin/bash - 
 #===============================================================================
-#          FILE: kaltura-base-config.sh
-#         USAGE: ./kaltura-base-config.sh 
+#          FILE: kaltura-config-all.sh
+#         USAGE: ./kaltura-config-all.sh 
 #   DESCRIPTION: 
 #       OPTIONS: ---
 #  REQUIREMENTS: ---
@@ -9,7 +9,7 @@
 #         NOTES: ---
 #        AUTHOR: Jess Portnoy (), <jess.portnoy@kaltura.com>
 #  ORGANIZATION: Kaltura, inc.
-#       CREATED: 02/21/14 13:13:38 EST
+#       CREATED: 03/17/14 05:27:57 EDT
 #      REVISION:  ---
 #===============================================================================
 
@@ -40,15 +40,15 @@ OUT="1"
 #send_install_becon `basename $0` $ZONE install_start 
 $BASE_DIR/bin/kaltura-base-config.sh "$ANSFILE"
 if [ $? -ne 0 ];then
-       echo "$BASE_DIR/bin/kaltura-base-config.sh failed:( You can re-run it when the issue is fixed."
-#       send_install_becon kaltura-base $ZONE "install_fail: $OUT"
+       echo -e "${BRIGHT_RED}ERROR: $BASE_DIR/bin/kaltura-base-config.sh failed:( You can re-run it when the issue is fixed.${NORMAL}"
+#       senddd_install_becon kaltura-base $ZONE "install_fail: $OUT"
        exit 1
 fi
 #send_install_becon kaltura-base $ZONE "install_success"
 
 RC_FILE=/etc/kaltura.d/system.ini
 if [ ! -r "$RC_FILE" ];then
-       echo "Could not find $RC_FILE so, exiting.."
+       echo -e "${BRIGHT_RED}ERROR: could not find $RC_FILE so, exiting..${NORMAL}"
        exit 2
 fi
 . $RC_FILE
@@ -59,7 +59,7 @@ echo "Running FrontEnd config...
 #send_install_becon kaltura-front $ZONE install_start 
 $BASE_DIR/bin/kaltura-front-config.sh "$ANSFILE"
 if [ $? -ne 0 ];then
-       echo "$BASE_DIR/bin/kaltura-front-config.sh failed:( You can re-run it when the issue is fixed."
+       echo -e "${BRIGHT_RED}ERROR: $BASE_DIR/bin/kaltura-front-config.sh failed:( You can re-run it when the issue is fixed.${NORMAL}"
 #       send_install_becon kaltura-front $ZONE "install_fail: $OUT"
        exit 2 
 fi
@@ -70,7 +70,7 @@ echo "Running Sphinx config...
 #send_install_becon kaltura-sphinx $ZONE install_start 
 $BASE_DIR/bin/kaltura-sphinx-config.sh "$ANSFILE"
 if [ $? -ne 0 ];then
-       echo "$BASE_DIR/bin/kaltura-sphinx-config.sh failed:( You can re-run it when the issue is fixed."
+       echo -e "${BRIGHT_RED}ERROR: $BASE_DIR/bin/kaltura-sphinx-config.sh failed:( You can re-run it when the issue is fixed.${NORMAL}"
  #      send_install_becon kaltura-sphinx $ZONE "install_fail: $OUT"
        exit 3 
 fi
@@ -90,7 +90,7 @@ $BASE_DIR/bin/kaltura-db-config.sh $DB1_HOST $SUPER_USER $SUPER_USER_PASSWD $DB1
  #      send_install_becon kaltura-db $ZONE "install_fail: $OUT"
         if [ $RC = 111 ];then
   #              send_install_becon kaltura-db $ZONE "install_fail: Tried reaching $SERVICE_URL/api_v3/index.php?service=system&action=ping and couldn't"
-                echo "$BASE_DIR/bin/kaltura-db-config.sh $DB1_HOST $SUPER_USER $SUPER_USER_PASSWD $DB1_PORT failed when trying to populate the DB.
+                echo -e "${BRIGHT_RED}ERROR: $BASE_DIR/bin/kaltura-db-config.sh $DB1_HOST $SUPER_USER $SUPER_USER_PASSWD $DB1_PORT failed when trying to populate the DB.
 It tried reaching $SERVICE_URL/api_v3/index.php?service=system&action=ping and couldn't.
 This probably means you have either inputted and bad service URL or have yet to configure your Apache.
 To configure your Apache, please use $BASE_DIR/bin/kaltura-front-config.sh.
@@ -98,11 +98,10 @@ Since the schema creation succeeded, you can skip that part by running:
 # POPULATE_ONLY=1 $BASE_DIR/bin/kaltura-db-config.sh $DB1_HOST $SUPER_USER $SUPER_USER_PASSWD $DB1_PORT 
 
 Please run it manually to debug the issue.
-You may run $0 again once done."
+You may run $0 again once done.${NORMAL}"
                 exit 111
         else
-                echo "We failed on something else.."
-   #             send_install_becon kaltura-sphinx $ZONE "install_fail: $OUT"
+                echo -e "${BRIGHT_RED}ERROR: we failed on something else..${NORMAL}"
                 exit 112
         fi
        fi
@@ -117,7 +116,7 @@ echo "Running Batch config...
 #send_install_becon kaltura-batch $ZONE install_start
 $BASE_DIR/bin/kaltura-batch-config.sh "$ANSFILE"
 if [ $? -ne 0 ];then
-       echo "$BASE_DIR/bin/kaltura-batch-config.sh failed:( You can re-run it when the issue is fixed."
+       echo -e "${BRIGHT_RED}ERROR: $BASE_DIR/bin/kaltura-batch-config.sh failed:( You can re-run it when the issue is fixed.${NORMAL}"
  #      send_install_becon kaltura-batch $ZONE "install_fail: $OUT"
 fi
 
@@ -132,26 +131,26 @@ echo "Running DWH config...
 #send_install_becon kaltura-dwh $ZONE install_start
 $BASE_DIR/bin/kaltura-dwh-config.sh "$ANSFILE" 
 if [ $? -ne 0 ];then
-       echo "$BASE_DIR/bin/kaltura-dwh-config.sh failed:( You can re-run it when the issue is fixed."
+       echo -e "${BRIGHT_RED}ERROR: $BASE_DIR/bin/kaltura-dwh-config.sh failed:( You can re-run it when the issue is fixed.${NORMAL}"
  #      send_install_becon kaltura-dwh $ZONE "install_fail: $OUT"
 fi
 #send_install_becon kaltura-dwh $ZONE install_success
 rm -rf $APP_DIR/cache/*
 rm -f $APP_DIR/log/kaltura-*.log
 
-echo "
+echo -e "${CYAN}
 ====================================================================================================================
 
 Setup completed successfully! 
 
 To access your Kaltura tools visit:
-$SERVICE_URL
+${BRIGHT_BLUE}$SERVICE_URL${CYAN}
 
 To begin, access the Admin Console using the Admin email and password you've entered while installing.
 When logged in to the KAC, create a new publisher account to being using Kaltura.
-Visit http://www.kaltura.org to join the community and get help!
-Visit http://knowledge.kaltura.com to read documentation and learn more.
-=====================================================================================================================
+Visit ${BRIGHT_BLUE}http://www.kaltura.org${CYAN} to join the community and get help!
+Visit ${BRIGHT_BLUE}http://knowledge.kaltura.com${CYAN} to read documentation and learn more.
+=====================================================================================================================${NORMAL}
 "
 
 find $BASE_DIR/app/cache/ $BASE_DIR/log -type d -exec chmod 775 {} \; 
@@ -159,4 +158,5 @@ find $BASE_DIR/app/cache/ $BASE_DIR/log -type f -exec chmod 664 {} \;
 chown -R kaltura.apache $BASE_DIR/app/cache/ $BASE_DIR/log
 chmod 775 $BASE_DIR/web/content
 send_post_inst_msg $ADMIN_CONSOLE_ADMIN_MAIL 
+
 

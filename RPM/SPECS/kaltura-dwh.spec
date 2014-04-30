@@ -2,8 +2,8 @@
 %define kaltura_user kaltura
 Summary: Kaltura Open Source Video Platform - Analytics 
 Name: kaltura-dwh
-Version: 9.2.0
-Release: 6 
+Version: 9.3.0
+Release: 2 
 License: AGPLv3+
 Group: Server/Platform 
 Source0: https://github.com/kaltura/dwh/archive/%{name}-IX-%{version}.zip
@@ -61,9 +61,6 @@ fi
 if [ "$1" = 0 ];then
 	%{prefix}/bin/kaltura-dwh-config.sh
 fi
-# Alas, we only work well with Sun's Java so, first lets find the latest version we have for it [this package is included in Kaltura's repo, as taken from Oracle's site
-LATEST_JAVA=`ls -d /usr/java/jre*|tail -1`
-alternatives --install /usr/bin/java java $LATEST_JAVA/bin/java  20000
 
 %preun
 if [ "$1" = 0 ] ; then

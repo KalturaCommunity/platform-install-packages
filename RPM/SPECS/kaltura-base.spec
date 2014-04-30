@@ -1,8 +1,3 @@
-# this sucks but base.ini needs to know the KMC version and it needs to be known cross cluster because, it is needed to generate the UI confs, which is done by the db-config postinst script which can run from every cluster node.
-%define kmc_version v5.37.12
-%define clipapp_version v1.0.7
-%define html5_version v2.4
-%define kdp3_wrapper_version v37.0
 %define kaltura_user	kaltura
 %define kaltura_group	kaltura
 %define apache_user	apache
@@ -14,7 +9,7 @@
 
 Summary: Kaltura Open Source Video Platform 
 Name: kaltura-base
-Version: 9.12.0
+Version: 9.15.0
 Release: 1
 License: AGPLv3+
 Group: Server/Platform 
@@ -42,9 +37,10 @@ Source17: navigation.xml
 Source18: monit.phtml 
 Source19: IndexController.php
 Source20: sphinx.populate.template.rc
-
-#Source10: 01.UserRole.99.template.xml
-#Source9: 01.conversionProfile.99.template.xml
+Source21: kaltura_batch_upload_falcon.zip
+Source22: 01.UserRole.99.template.xml
+Source23: 04.flavorParams.ini
+Source24: 04.liveParams.ini
 URL: https://github.com/kaltura/server/tree/IX-%{version}
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
@@ -93,6 +89,7 @@ mkdir -p $RPM_BUILD_ROOT%{prefix}/web/control
 mkdir -p $RPM_BUILD_ROOT%{prefix}/web/content/cacheswf
 mkdir -p $RPM_BUILD_ROOT%{prefix}/web/content/uploads
 mkdir -p $RPM_BUILD_ROOT%{prefix}/web/content/entry
+mkdir -p $RPM_BUILD_ROOT/%{prefix}/web/content/docs/
 mkdir -p $RPM_BUILD_ROOT%{prefix}web/content//metadata
 mkdir -p $RPM_BUILD_ROOT%{prefix}/web/content/batchfiles
 mkdir -p $RPM_BUILD_ROOT%{prefix}/web/content/templates
@@ -112,7 +109,7 @@ done
 find  $RPM_BUILD_ROOT%{prefix}/app -name "*.sh" -type f -exec chmod +x {} \;
 
 
-sed -i "s@\(^kmc_version\)\s*=.*@\1=%{kmc_version}@g" $RPM_BUILD_ROOT%{prefix}/app/configurations/base.ini
+sed -i "s@\(^kmc_version\)\s*=.*@\1=%{_kmc_version}@g" $RPM_BUILD_ROOT%{prefix}/app/configurations/base.ini
 sed -i "s@\(^clipapp_version\)\s*=.*@\1=%{clipapp_version}@g" $RPM_BUILD_ROOT%{prefix}/app/configurations/base.ini
 sed -i "s@\(^html5_version\)\s*=.*@\1=%{html5_version}@g" $RPM_BUILD_ROOT%{prefix}/app/configurations/base.ini
 sed -i "s@\(^kdp3_wrapper_version\)\s*=.*@\1=%{kdp3_wrapper_version}@g" $RPM_BUILD_ROOT%{prefix}/app/configurations/base.ini
@@ -122,6 +119,9 @@ sed -i 's@^writers.\(.*\).filters.priority.priority\s*=\s*7@writers.\1.filters.p
 sed -i 's#\(@DWH_DIR@\)$#\1 -k %{prefix}/pentaho/pdi/kitchen.sh#g' $RPM_BUILD_ROOT%{prefix}/app/configurations/cron/dwh.template
 rm $RPM_BUILD_ROOT%{prefix}/app/generator/sources/android/DemoApplication/libs/libWVphoneAPI.so
 rm $RPM_BUILD_ROOT%{prefix}/app/configurations/.project
+# see https://github.com/kaltura/platform-install-packages/issues/58 - these are taken care of on lines 139 though 144:
+rm $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.d/*template*
+
 # we bring our own for kaltura-front and kaltura-batch.
 cp %{SOURCE1} $RPM_BUILD_ROOT%{prefix}/app/configurations/apache/kaltura.ssl.conf.template
 cp %{SOURCE3} $RPM_BUILD_ROOT%{prefix}/app/configurations/apache/kaltura.conf.template
@@ -132,7 +132,9 @@ cp %{SOURCE6} $RPM_BUILD_ROOT%{prefix}/app/deployment/base/scripts/init_data/02.
 cp %{SOURCE8} $RPM_BUILD_ROOT%{prefix}/app/deployment/base/scripts/init_content/01.uiConf.99.template.xml
 cp %{SOURCE7} $RPM_BUILD_ROOT%{prefix}/app/configurations/cron/dwh.template
 cp %{SOURCE9} $RPM_BUILD_ROOT%{prefix}/app/configurations/plugins.template.ini
-#cp %{SOURCE10} $RPM_BUILD_ROOT%{prefix}/app/deployment/base/scripts/init_content/01.UserRole.99.template.xml
+cp %{SOURCE22} $RPM_BUILD_ROOT%{prefix}/app/deployment/base/scripts/init_content/01.UserRole.99.template.xml
+cp %{SOURCE23} $RPM_BUILD_ROOT%{prefix}/app/deployment/base/scripts/init_data/
+cp %{SOURCE24} $RPM_BUILD_ROOT%{prefix}/app/deployment/base/scripts/init_data/
 cp %{SOURCE11} $RPM_BUILD_ROOT%{prefix}/app/alpha/crond/kaltura/clear_cache.sh
 mkdir -p $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.avail
 cp %{SOURCE12} $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.avail/
@@ -141,6 +143,9 @@ cp %{SOURCE20} $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.avail/
 cp %{SOURCE14} $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.avail/
 cp %{SOURCE15} $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.avail/
 cp %{SOURCE16} $RPM_BUILD_ROOT%{prefix}/app/configurations/monit/monit.avail/
+
+# sample bulks
+cp %{SOURCE21} $RPM_BUILD_ROOT%{prefix}/web/content/docs/
 
 # David Bezemer's Admin console and monit patches:
 cp %{SOURCE17} $RPM_BUILD_ROOT%{prefix}/app/admin_console/configs/navigation.xml
@@ -162,6 +167,9 @@ PATH=\$PATH:%{prefix}/bin
 export PATH
 alias allkaltlog='grep --color "ERR:\|PHP\|trace\|CRIT\|\[error\]" %{prefix}/log/*.log %{prefix}/log/batch/*.log'
 alias kaltlog='tail -f %{prefix}/log/*.log %{prefix}/log/batch/*.log | grep -A 1 -B 1 --color "ERR:\|PHP\|trace\|CRIT\|\[error\]"'
+if [ -r /etc/kaltura.d/system.ini ];then
+	. /etc/kaltura.d/system.ini
+fi
 EOF
 
 %{__mkdir_p} $RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d
@@ -218,15 +226,28 @@ if [ "$1" = 2 ];then
 		if [ -x %{_sysconfdir}/init.d/httpd ];then
 			%{_sysconfdir}/init.d/httpd restart
 		fi
+		# see https://kaltura.atlassian.net/wiki/pages/viewpage.action?spaceKey=QAC&title=QA.Core+Deployment+Instructions%3A+Mar+9%2C+2014
+		CORE_MAJ_VER=`echo %{version}|awk -F '.' '{print $2}'`
+		if [ $CORE_MAJ_VER -lt 12 ];then
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_01_20_categoryentry_syncprivacycontext_action.php > /tmp/2014_01_20_categoryentry_syncprivacycontext_action.php.log
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_01_26_add_media_server_partner_level_permission.php > /tmp/add_permissions/2014_01_26_add_media_server_partner_level_permission.php.log
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_02_25_add_push_publish_permission_to_partner_0.php > /tmp/2014_02_25_add_push_publish_permission_to_partner_0.php
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_01_26_update_live_stream_service_permissions.php > /tmp/add_permissions/2014_01_26_update_live_stream_service_permissions.php.log
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_02_25_add_push_publish_permission_to_live_asset_parameters.php > /tmp/2014_02_25_add_push_publish_permission_to_live_asset_parameters.php.log
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_02_25_add_push_publish_permission_to_live_entry_parameters.php > /tmp/2014_02_25_add_push_publish_permission_to_live_entry_parameters.php.log
+			php %{prefix}/app/alpha/scripts/utils/setCategoryEntriesPrivacyContext.php realrun > /tmp/setCategoryEntriesPrivacyContext.php.log
+		elif [ $CORE_MAJ_VER -lt 13 ];then
+
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_03_10_addpushpublishconfigurationaction_added_to_livestreamservice.php > /tmp/2014_03_10_addpushpublishconfigurationaction_added_to_livestreamservice.php.log
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_03_09_add_system_admin_publisher_config_to_audittrail.php > /tmp/2014_03_09_add_system_admin_publisher_config_to_audittrail.php.log
+		elif [ $CORE_MAJ_VER -lt 14 ];then
+			php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_03_09_add_system_admin_publisher_config_to_audittrail.php > /tmp/2014_03_09_add_system_admin_publisher_config_to_audittrail.php.log
+		elif [ $CORE_MAJ_VER -lt 15 ];then
+			php %{prefix}/app/deployment/updates/scripts/2014_04_02_enforce_live_params_permissions.php > /tmp/2014_04_02_enforce_live_params_permissions.php.log
+			php %{prefix}/app/deployment/updates/scripts/2014_04_16_remove_cloud_transcode_profile.php realrun > /tmp/2014_04_16_remove_cloud_transcode_profile.php.log
+			php %{prefix}/app/deployment/updates/scripts/2014_04_22_enable_live_paid_partners.php realrun > /tmp/2014_04_22_enable_live_paid_partners.php.log
+		fi	
 	fi
-	# see https://kaltura.atlassian.net/wiki/pages/viewpage.action?spaceKey=QAC&title=QA.Core+Deployment+Instructions%3A+Mar+9%2C+2014
-	php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_01_20_categoryentry_syncprivacycontext_action.php
-	php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_01_26_add_media_server_partner_level_permission.php
- 	php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_02_25_add_push_publish_permission_to_partner_0.php
- 	php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_01_26_update_live_stream_service_permissions.php
-	php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_02_25_add_push_publish_permission_to_live_asset_parameters.php
-	php %{prefix}/app/deployment/updates/scripts/add_permissions/2014_02_25_add_push_publish_permission_to_live_entry_parameters.php
-	php %{prefix}/app/alpha/scripts/utils/setCategoryEntriesPrivacyContext.php realrun
 
 fi
 
@@ -282,6 +303,87 @@ fi
 
 
 %changelog
+* Thu Apr 24 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.15.0-1
+- Ver Bounce to 9.15.0
+- SUP-1866 - Disabling email notifications
+- PLAT-1155 - Live streaming provision should exclude cloud transcode where not available
+- PLAT-1241 - Kaltura live - add support for setting base URL per customer
+- PLAT-1163 - Job suspend
+- i18n system flip (switched off by default)
+- PLAT-975 - add an option to define partner specific default thumbnail for audio entries 
+- PLAT-982 - m4a container support
+- PLAT-1037 - Using updateContent API request on an entry does not retain custom thumbnails 
+- Add a GeoDistance condition to the access control profile which verifies whether the request IP is within a given latitude:longitude:radius ranges (requires new ip2location)
+- SUP-1772 - Video replacement - cannot "Preview" flavor asset before approving replacement
+- SUP-1866 - Disabling email notifications
+- SUP-1742 - INTERNAL_SERVER_ERROR when trying to reset to a password with an invalid structure
+- PLAT-692 - Freezes occurs when playing kaltura live entry. (happens in production as well)
+- PLAT-1229 - When setting liveTranscording without source->FMLE export config is wrong
+- PLAT-1233 - Audio-Video Sync Issue on Live stream
+- PLAT-952 - Production:Kaltura live entry that is stream for many hours can't play->media not found
+
+
+* Tue Apr 8 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.14.0-6
+- We need to run the alter scripts in the event the version is lower than n, not equal to n. Why? cause jumping from say 11 to 13 is completely legit.
+
+* Mon Apr 6 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.14.0-4
+- Another instance of the ipadnew tag[darn!].
+
+* Sun Apr 6 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.14.0-1
+- Ver Bounce to 9.14.0
+- PLAT-927 - In YouTube API connector map an entry to a YT playlist
+- SUP-1641 - Open Editor for the config file is not working
+- SUP-1775 - MP4 corrupted source shows as ready in KMC 
+- SUP-1579 - Entry 1_q5jzwqd0 not found in HTTP progressive
+- SUP-1612 - remote storage is not updated
+- SUP-1676 - CSV Bulk Upload - Fail
+- PLAT-1080 - Security Fix - Prevent Admin-Console from being loaded in iFrame
+- PLAT-1081 - Security Fix - disable auto complete for password field in admin-console login
+- PLAT-1082 - Security Fix - admin-console session cookie security hardening
+- PLAT-1151 - Webex - detect black/silent conversions
+- PLAT-1145 - Updating UIConf with JSOn Config looses the config XML 
+
+* Sun Apr 1 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.13.0-6
+- Here is our problem: the ip{hone,ad}new tags are only good for Akamai HLS, on any other serve method, it makes ip{hone,ad} serves not to work.
+  If a user DOES wish to use Akamai HLS, we have the kaltura-remote-storage-config.sh for them to run.
+
+* Thu Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.13.0-4
+- Log update scripts output to file instead of STDOUT
+
+* Tue Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.13.0-3
+- if system.ini is available, source it in kaltura_base.sh, good when you run stuff like:
+  mysql -h$DB1_HOST -p$DB1_PASS
+
+* Tue Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.13.0-2
+- Typo in file path.
+
+* Tue Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.13.0-1
+- Ver Bounce to 9.13.0
+- PLAT-307 - FFMpeg 2.1.3 integration 
+- PLAT-914 - FileSyncImport - re-use curl 
+- PLAT-558 - Live streaming should support multiple stream ingest 
+- PLAT-932 - Production admin_console: "View History" doesn't work 
+- PLAT-1003 - E-mail for notification ,configurable fields override default values 
+- SUP-1567 - Problem to duplicate KSR from admin console. 
+- SUP-1625 - Avoid creating notification jobs when no notification email is configured
+
+
+* Tue Mar 20 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.12.0-7
+- Remove password tag from app/deployment/base/scripts/init_content/01.UserRole.99.template.xml.
+  It causes issues and isn;t needed.
+
+* Tue Mar 20 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.12.0-6
+- https://github.com/kaltura/server/commit/4d47c158774ebd41b0a60e6af20f0beab02d459d did not make it in so, reapplying the patch.
+
+* Tue Mar 18 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.12.0-5
+- Don't run upgrade scripts if not INIs.
+
+* Thu Mar 13 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.12.0-2
+- Generate random monit passwd.
+
+* Thu Mar 13 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.12.0-2
+- Fix for https://github.com/kaltura/platform-install-packages/issues/71
+
 * Sun Mar 9 2014 Jess Portnoy <jess.portnoy@kaltura.com> - 9.12.0-1
 - Ver Bounce to 9.12.0
 - PLAT-852 - Wowza working with multicast in a hybrid model Closed

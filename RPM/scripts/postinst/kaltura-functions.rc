@@ -5,6 +5,10 @@ if [  -r "$RC_FILE" ];then
 else
 	BASE_DIR=/opt/kaltura
 fi
+COLORS_RC=`dirname $0`/colors.sh
+if [ -r $COLORS_RC ];then
+	. $COLORS_RC
+fi
 if [ -r /etc/sysconfig/clock ];then
         . /etc/sysconfig/clock
 fi
@@ -13,6 +17,13 @@ if [ -r $BASE_DIR/app/configurations/consent_msgs ];then
 	. $BASE_DIR/app/configurations/consent_msgs 
 fi
 CONSENT_FILE=/opt/kaltura/bin/contact.rc
+APACHE_DAEMON=httpd
+MYSQL_DAEMON=mysqld
+SPHINX_DAEMON=kaltura-sphinx
+BATCH_DAEMON=kaltura-batch
+MEMCACHE_DAEMON=memcached
+MONIT_DAEMON=kaltura-monit
+ALL_DAEMONS="$APACHE_DAEMON $SPHINX_DAEMON $BATCH_DAEMON $MONIT_DAEMON $MEMCACHE_DAEMON"
 
 POST_INST_MAIL_SUBJECT='Your new Kaltura server is up! and 6 Quick Tips For Smooth Kaltura Maintenance'
 POST_INST_MAIL_TMPL=$BASE_DIR/app/configurations/post_inst_mail
@@ -27,7 +38,7 @@ call_base_config()
 	if [ ! -r $BASE_DIR/app/base-config.lock ];then
 		`dirname $0`/kaltura-base-config.sh $ANSFILE
 	else
-		echo "base-config skipped as /opt/kaltura/app/base-config.lock was found. Remove the lock to reconfigure."
+		echo -e "${CYAN}base-config skipped as /opt/kaltura/app/base-config.lock was found. Remove the lock to reconfigure.${NORMAL}"
 	fi
 
 }
@@ -60,7 +71,7 @@ check_mysql_settings()
 		RC=1
 	fi
 
-	echo -en "$MSG\n"
+	echo -en "${BRIGHT_RED}$MSG${NORMAL}\n"
 	return $RC
 	
 }
@@ -74,21 +85,21 @@ check_connectivity()
 	SPHINX_SERVER=$5
 	SERVICE_URL=$6
 	RC=0
-	MSG="Connectivity test passed:)"
+	MSG="${CYAN}Connectivity test passed:)${NORMAL}"
 	echo "select version();" | mysql -u$DB_USER -p$DB_PASSWD -h$DB_HOST -P$DB_PORT -N > /dev/null 2>&1
 	if [ $? -ne 0 ];then
-		MSG="Couldn't connect with mysql -u$DB_USER -p$DB_PASSWD -h$DB_HOST -P$DB_PORT."
+		MSG="${BRIGHT_RED}ERROR: Couldn't connect with mysql -u$DB_USER -p$DB_PASSWD -h$DB_HOST -P$DB_PORT.${NORMAL}"
 		RC=1
 	fi
 	
 	echo "show tables;" | mysql -h$SPHINX_SERVER -P9312  > /dev/null 2>&1
 	if [ $? -ne 0 ];then
-		MSG="$MSG\nCouldn't connect to Sphinx with mysql -h$SPHINX_SERVER -P9312."
+		MSG="$MSG\n${BRIGHT_RED}ERROR: Couldn't connect to Sphinx with mysql -h$SPHINX_SERVER -P9312.${NORMAL}"
 		RC=1
 	fi
 	curl "$SERVICE_URL/api_v3/index.php?service=system&action=ping" -k  > /dev/null 2>&1
 	if [ $? -ne 0 ];then
-		MSG="$MSG\nCouldn't make an API request to $SERVICE_URL/api_v3/index.php?service=system&action=ping."
+		MSG="$MSG\n${BRIGHT_RED}ERROR: Couldn't make an API request to $SERVICE_URL/api_v3/index.php?service=system&action=ping.${NORMAL}"
 		RC=1
 	fi
 
@@ -106,14 +117,14 @@ check_cert_key()
 	CRT_SUM=`openssl x509 -in $CRT_FILE -modulus -noout | openssl md5`
 	KEY_SUM=`openssl rsa -in $KEY_FILE -modulus -noout | openssl md5`
 	if [ "$CRT_SUM" != "$KEY_SUM" ];then
-		echo "
+		echo -e "${BRIGHT_RED}
 
 	MD5 sums between .key and .crt files DO NOT MATCH
 	# openssl rsa -in $KEY_PATH -modulus -noout | openssl md5
 	$KEY_HASH
 	# openssl x509 -in $CERT_PATH -modulus -noout | openssl md5
 	$CRT_HASH
-
+	${NORMAL}
 	"
 		return 1
 	fi
@@ -125,9 +136,9 @@ is_self_signed()
 	# check if cert is self signed:
 	CRT_FILE=$1
 	if openssl verify  $CRT_FILE | grep 'self signed certificate' -q ;then
-		echo "
+		echo -en "
 
-	WARNING: self signed cerificate detected. Will set settings.clientConfig.verifySSL=0 in $APP_DIR/configurations/admin.ini.
+	${YELLOW}WARNING: self signed cerificate detected. Will set settings.clientConfig.verifySSL=0 in $APP_DIR/configurations/admin.ini.${NORMAL}
 
 
 	"
@@ -206,7 +217,7 @@ my_trap_handler()
         RPM_VER=`rpm -q kaltura-postinst`
 	if [ -d /opt/kaltura/log ];then
 		TAR_PATH=/opt/kaltura/log/log_`date +%d_%m_%y_%H_%M`.tar.gz	
-		echo "$FAIL_MSG
+		echo -en "${BRIGHT_RED}$FAIL_MSG${NORMAL}
 
 
 		"
@@ -220,9 +231,7 @@ my_trap_handler()
 		. $CONSENT_FILE 
 	fi
 	
-	#if [ "$USER_CONSENT" -eq 1 ];then
-       		send_install_becon ${MYSELF} $ZONE install_fail "${LASTLINE},${RPM_VER}"
-	#fi
+       	send_install_becon ${MYSELF} $ZONE install_fail "${LASTLINE},${RPM_VER}"
         exit 11
 }
 
@@ -240,10 +249,10 @@ validate_mail()
 get_tracking_consent()
 {
 
-	echo "$PRE_CONSENT 
+	echo -en "${BRIGHT_BLUE}$PRE_CONSENT 
 	
 
-[Email\NO]:"
+[Email\NO]:${NORMAL}"
 
 	CONTACT_MAIL="mailhere"
 	read -e CONTACT_MAIL
@@ -267,7 +276,7 @@ check_if_upgrade()
 	trap - ERR
 	CUR_BASE_VERSION=`rpm -qa kaltura-base --queryformat %{version}-%{release}`
 	LAST_BASE_VERSION=`cat $BASE_DIR/bin/last_base_ver 2> /dev/null`
-	if [ $CUR_BASE_VERSION = "$LAST_BASE_VERSION" ];then
+	if [ "$CUR_BASE_VERSION" = "$LAST_BASE_VERSION" ];then
 		return 1 
 	fi
 	return 0 
@@ -278,4 +287,178 @@ write_last_base_version()
 {
 	CUR_BASE_VERSION=`rpm -qa kaltura-base --queryformat %{version}-%{release}`
 	echo "$CUR_BASE_VERSION" > $BASE_DIR/bin/last_base_ver
+}
+
+check_daemon_init_status()
+{
+#set -x
+        DAEMON=$1
+        if chkconfig $DAEMON;then
+                return 0
+        fi
+        return 1
+#set +x
+}
+
+check_daemon_status()
+{
+#set -x
+        DAEMON=$1
+        if service $DAEMON status >/dev/null;then
+                return 0
+        fi
+#set +x
+        return 1
+}
+
+check_monit()
+{
+        DAEMON=$1
+        service $DAEMON stop >/dev/null
+	for i in `seq 1 60`;do
+        	if service $DAEMON status >/dev/null;then
+                	return 0
+        	fi
+	echo -e "${CYAN}Napping 1 seconds to allow the daemon $DAEMON to finish its init after monit restarted it..${NORMAL}"
+	sleep 1
+	done
+        return 1
+} 
+
+check_space()
+{
+	SPACE=`df -k $1 |sed '1,1d' |awk -F " " '{print $3}'`;if [ $SPACE -lt 700000 ];then 
+		echo "$SPACE"
+		return 1
+	else
+		echo "$SPACE"
+		return 0
+	fi
+}
+
+check_start_page()
+{
+	# requesting the service URL should get a HTTP 301 to start page
+	START_PAGE=`curl -ks "$SERVICE_URL"  | grep 'The document has moved '|sed 's@.*a href="\(.*\)".*@\1@g'`
+	curl -ks $START_PAGE | grep 'Kaltura Video Platfrom - Home Page' -q
+	if [ $? -eq 0 ];then
+		echo "Successfully found 'Kaltura Video Platfrom - Home Page' on page $START_PAGE"
+		return 0
+	else
+		echo "Did not find 'Kaltura Video Platfrom - Home Page' on page $START_PAGE :("
+		return 1
+	fi	
+} 
+
+check_testme_page()
+{
+	TESTME_PAGE=`curl -ks "$SERVICE_URL/api_v3/testme"  | grep 'The document has moved '|sed 's@.*a href="\(.*\)".*@\1@g'`
+	curl -ks $TESTME_PAGE | grep 'Kaltura - Test Me Console' -q
+	if [ $? -eq 0 ];then
+		echo "Successfully found 'Kaltura - Test Me Console' on page $TESTME_PAGE"
+		return 0
+	else
+		echo "Did not find 'Kaltura - Test Me Console' on page $TESTME_PAGE :("
+		return 1
+	fi	
+} 
+check_kmc_index_page()
+{
+	curl -ks "$SERVICE_URL/kmc"  | grep -q 'Kaltura - Open Source Video Platform'
+	if [ $? -eq 0 ];then
+		echo "Successfully found 'Kaltura - Open Source Video Platform'"
+		return 0
+	else
+		echo "Did not find 'Kaltura - Open Source Video Platform' :("
+		return 1
+	fi
+}
+
+check_admin_console_index_page()
+{
+	AC_PAGE=`curl -ks "$SERVICE_URL/admin_console"  | grep 'The document has moved '|sed 's@.*a href="\(.*\)".*@\1@g'`
+	curl -ks $AC_PAGE | grep 'Kaltura Admin Console' -q
+	if [ $? -eq 0 ];then
+		echo "Successfully found 'Kaltura Admin Console' on page $AC_PAGE"
+		return 0
+	else
+		echo "Did not find 'Kaltura Admin Console' on page $AC_PAGE :("
+		return 1
+	fi	
+}
+
+test_red5_conn()
+{
+	$BASE_DIR/bin/fms_push_file_monitor.sh $BASE_DIR/web/content/templates/entry/data/kmc_logo.flv rtmp://$RED5_HOST/oflaDemo/
+	RC=$?
+	return $RC 
+
+}
+
+report()
+{
+	TNAME=$1
+	RC=$2
+	MESSAGE=$3
+	TIME=$4
+	if [ "$RC" -eq 0 ];then
+		COLOR=${GREEN}
+		STAT="PASSED"
+	else
+		COLOR=${BRIGHT_RED}
+		STAT="FAILED"
+	fi
+
+
+	echo -e "[${CYAN}$TNAME${NORMAL}] [${COLOR}$STAT, RC: $RC${NORMAL}] - [$TIME]"
+#	echo -e "$TNAME,,`hostname`,$MESSAGE,$RC, $TIME" >> /tmp/`hostname`-reportme.`date +%d_%m_%Y`.csv
+	echo "INSERT INTO csi_log VALUES(NULL,'$TNAME','`hostname`',`date +%s`,\"$MESSAGE\",$RC,$TIME,'`rpm -qa kaltura-base --queryformat %{version}`');" >> /tmp/`hostname`-reportme.`date +%d_%m_%Y`.sql
+}
+
+check_missing_web_files()
+{
+	MISSING_LIST="/tmp/missing_web_files_`date +%d_%m_%Y`"
+	TMP_MISSING_LIST="/tmp/missing_web_files_tmp_`date +%d_%m_%Y`"
+	# query to get all ui_confs
+	for i in `echo "select conf_file_path from ui_conf" | mysql -N -h $DB1_HOST -u $DB1_USER -p$DB1_PASS kaltura`;do 
+		if [ -r "$WEB_DIR/$i" ];then 
+			# run line by line over the XML to find the paths
+			while read L;do 
+				PATH_TO_SKIN=`echo $L|grep "/content" | sed 's#.*\(/content.*.htm\|/content.*.png\|/content.*.swf\|/content.*.xml\|/content.*.pdf\|/content.*.zip\).*#\1#g'` 
+				if [ -n "$PATH_TO_SKIN" ];then
+					if [ ! -r "$WEB_DIR$PATH_TO_SKIN" ];then 
+						echo "$WEB_DIR/$PATH_TO_SKIN is missing" >> $TMP_MISSING_LIST;
+						MATCH=1
+					fi
+				fi;
+			done < $WEB_DIR/$i;
+		else 
+			echo "UI conf $WEB_DIR/$i is missing" >> $TMP_MISSING_LIST;
+			MATCH=1
+		fi;
+	done
+	if [ $MATCH = 1 ];then
+		awk -F ' ' '{print $1}' $TMP_MISSING_LIST|sort -u > $MISSING_LIST
+		echo "See $MISSING_LIST for a list of misses"
+		return 1
+	else
+		return 0
+	fi
+}
+
+check_kmc_config_versions()
+{
+        COMP_NAME=$1
+        KMC_VER=$2
+#	set -x
+        	COMP_VER=`rpm -q $COMP_NAME --queryformat %{version}`
+                grep -q $COMP_VER /opt/kaltura/web/flash/kmc/$KMC_VER/config.ini -m1
+                RC=$?
+		if [ $RC -eq 0 ];then
+			echo "$COMP_NAME $COMP_VER found in /opt/kaltura/web/flash/kmc/$KMC_VER/config.ini"
+			return $RC
+		else
+			echo "$COMP_NAME $COMP_VER NOT found in /opt/kaltura/web/flash/kmc/$KMC_VER/config.ini"
+			return $RC
+		fi
 }

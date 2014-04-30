@@ -19,14 +19,14 @@ enable_apps_conf()
 	KALTURA_APACHE_CONFD=$1
 	cd $KALTURA_APACHE_CONFD
 	for CONF in  apps.conf var.conf ;do
-		echo "Enabling Apache config - $CONF"
+		echo -e "${CYAN}Enabling Apache config - $CONF${NORMAL}"
 		ln -s $CONF enabled.$CONF
 	done
 }
 enable_admin_conf()
 {
 	KALTURA_APACHE_CONFD=$1
-	echo "Enabling Apache config - admin.conf"
+	echo -e "${CYAN}Enabling Apache config - admin.conf${NORMAL}"
 	ln -s $KALTURA_APACHE_CONFD/admin.conf $KALTURA_APACHE_CONFD/enabled.admin.conf 
 }
 create_answer_file()
@@ -38,19 +38,22 @@ create_answer_file()
 			echo "$VAL=\"${!VAL}\"" >> $ANSFILE 
                 fi
         done
-	echo "
+	echo -e "${CYAN}
 
 ========================================================================================================================
 Kaltura install answer file written to $ANSFILE  -  Please save it!
 This answers file can be used to silently-install re-install this machine or deploy other hosts in your cluster.
 ========================================================================================================================
-
+${NORMAL}
 "
 }
-if ! rpm -q kaltura-front;then
-	echo "First install kaltura-front."
-	exit 11
+KALTURA_FUNCTIONS_RC=`dirname $0`/kaltura-functions.rc
+if [ ! -r "$KALTURA_FUNCTIONS_RC" ];then
+	OUT="Could not find $KALTURA_FUNCTIONS_RC so, exiting.."
+	echo $OUT
+	exit 3
 fi
+. $KALTURA_FUNCTIONS_RC
 if [ -n "$1" -a -r "$1" ];then
 	ANSFILE=$1
 	. $ANSFILE
@@ -61,28 +64,26 @@ fi
 if [ ! -r /opt/kaltura/app/base-config.lock ];then
 	`dirname $0`/kaltura-base-config.sh "$ANSFILE"
 	if [ $? -ne 0 ];then
-		echo "Base config failed. Please correct and re-run $0."
+		echo -e "${BRIGHT_RED}ERROR: Base config failed. Please correct and re-run $0.${NORMAL}"
 		exit 21
 	fi
 else
-	echo "base-config completed successfully, if you ever want to re-configure your system (e.g. change DB hostname) run the following script:
+	echo -e "${BRIGHT_BLUE}base-config completed successfully, if you ever want to re-configure your system (e.g. change DB hostname) run the following script:
 # rm /opt/kaltura/app/base-config.lock
 # $BASE_DIR/bin/kaltura-base-config.sh
+${NORMAL}
 "
 fi
 RC_FILE=/etc/kaltura.d/system.ini
 if [ ! -r "$RC_FILE" ];then
-	echo "Could not find $RC_FILE so, exiting.."
+	echo -e "${BRIGHT_RED}ERROR: could not find $RC_FILE so, exiting..${NORMAL}"
 	exit 1 
 fi
 . $RC_FILE
-KALTURA_FUNCTIONS_RC=`dirname $0`/kaltura-functions.rc
-if [ ! -r "$KALTURA_FUNCTIONS_RC" ];then
-	OUT="Could not find $KALTURA_FUNCTIONS_RC so, exiting.."
-	echo $OUT
-	exit 3
+if ! rpm -q kaltura-front;then
+	echo -e "${BRIGHT_BLUE}Skipping as kaltura-front is not installed.${NORMAL}"
+	exit 0 
 fi
-. $KALTURA_FUNCTIONS_RC
 trap 'my_trap_handler ${LINENO} ${$?}' ERR
 send_install_becon `basename $0` $ZONE install_start 
 KALTURA_APACHE_CONF=$APP_DIR/configurations/apache
@@ -106,7 +107,7 @@ fi
 trap 'my_trap_handler ${LINENO} ${$?}' ERR
 
 	if [ -z "$AUTO_YES" ];then
-		echo "It is recommended that you do work using HTTPs. Would you like to continue anyway?[N/y]"
+		echo -e "${YELLOW}It is recommended that you do work using HTTPs. Would you like to continue anyway?[N/y]${NORMAL}"
 		read CONT
 		if [ "$CONT" != 'y' ];then
 			echo "Exiting."
@@ -118,16 +119,16 @@ trap 'my_trap_handler ${LINENO} ${$?}' ERR
 else
 	# configure SSL:
 	MAIN_APACHE_CONF=$KALTURA_APACHE_CONF/kaltura.ssl.conf
-	if [ -z "$CRT_FILE" ] ;then
-		echo "Please input path to your SSL certificate[/etc/ssl/certs/localhost.crt]:"
+	if [ ! -r "$CRT_FILE" ] ;then
+		echo -e "${CYAN}Please input path to your SSL certificate[${YELLOW}/etc/ssl/certs/localhost.crt${CYAN}]:${NORMAL}"
 		read -e CRT_FILE
 		if [ -z "$CRT_FILE" ];then
 			CRT_FILE=/etc/ssl/certs/localhost.crt
 		fi
 		
 	fi
-	if [ -z "$KEY_FILE" ];then
-		echo "Please input path to your SSL key[/etc/pki/tls/private/localhost.key]:"
+	if [ ! -r "$KEY_FILE" ];then
+		echo -e "${CYAN}Please input path to your SSL key[${YELLOW}/etc/pki/tls/private/localhost.key${CYAN}]:${NORMAL}"
 		read -e KEY_FILE
 		if [ -z "$KEY_FILE" ];then
 			KEY_FILE=/etc/pki/tls/private/localhost.key
@@ -135,21 +136,21 @@ else
 
 	fi
 	if [ -z "$CHAIN_FILE" ];then
-		echo "Please input path to your SSL chain file or leave empty in case you have none:"
+		echo -e "${CYAN}Please input path to your SSL chain file or leave empty in case you have none${CYAN}:${NORMAL}"
 		read -e CHAIN_FILE
 	fi
 	# check key and crt match
 	CRT_SUM=`openssl x509 -in $CRT_FILE -modulus -noout | openssl md5`
 	KEY_SUM=`openssl rsa -in $KEY_FILE -modulus -noout | openssl md5`
 	if [ "$CRT_SUM" != "$KEY_SUM" ];then
-		echo "
+		echo -e ${BRIGHT_RED}"
 
-	MD5 sums between .key and .crt files DO NOT MATCH
+	ERROR: MD5 sums between .key and .crt files DO NOT MATCH
 	# openssl rsa -in $KEY_PATH -modulus -noout | openssl md5
 	$KEY_HASH
 	# openssl x509 -in $CERT_PATH -modulus -noout | openssl md5
 	$CRT_HASH
-
+	${NORMAL}
 	"
 		exit 3
 	fi
@@ -158,12 +159,12 @@ else
 
 	# if cert is self signed:
 	if openssl verify  $CRT_FILE | grep 'self signed certificate' -q ;then
-		echo "
+		echo -e "${YELLOW}
 
 WARNING: self signed cerificate detected. Will set settings.clientConfig.verifySSL=0 in $APP_DIR/configurations/admin.ini.
-
+	${NORMAL}
 	"
-		echo "settings.clientConfig.verifySSL=0" >> $APP_DIR/configurations/admin.ini
+		echo -e "settings.clientConfig.verifySSL=0" >> $APP_DIR/configurations/admin.ini
 		sed -i  's@\(\[production\]\)@\1\nsettings.clientConfig.verifySSL=0@' $APP_DIR/configurations/admin.ini
 	fi
 	if [ -f /etc/httpd/conf.d/ssl.conf ];then
@@ -184,7 +185,7 @@ WARNING: self signed cerificate detected. Will set settings.clientConfig.verifyS
 
 fi
 
-if [ "$IS_SSL" = 'Y' ];then 
+if [ "$IS_SSL" = 'Y' -o "$IS_SSL" = 1 -o "$IS_SSL" = 'y' -o "$IS_SSL" = 'true' ];then
 	DEFAULT_PORT=443
 	trap - ERR
 	echo "use kaltura" | mysql -h$DB1_HOST -u$DB1_USER -p$DB1_PASS -P$DB1_PORT $DB1_NAME 2> /dev/null
@@ -197,7 +198,7 @@ else
 fi
 
 if [ -z "$KALTURA_VIRTUAL_HOST_PORT" ];then
-	echo "Which port will this Vhost listen on? [$DEFAULT_PORT] "
+	echo -e "${CYAN}Which port will this Vhost listen on? [${YELLOW}$DEFAULT_PORT${CYAN}]${NORMAL} "
 	read -e KALTURA_VIRTUAL_HOST_PORT
 	if [ -z "$KALTURA_VIRTUAL_HOST_PORT" ];then
 		KALTURA_VIRTUAL_HOST_PORT=$DEFAULT_PORT
@@ -211,7 +212,7 @@ if [ -z "$KALTURA_VIRTUAL_HOST_PORT" ];then
 fi
 
 if [ -z "$SERVICE_URL" ];then
-	echo "Service URL [$PROTOCOL://$KALTURA_VIRTUAL_HOST_NAME:$KALTURA_VIRTUAL_HOST_PORT]: "
+	echo -e "${CYAN}Service URL [${YELLOW}$PROTOCOL://$KALTURA_VIRTUAL_HOST_NAME:$KALTURA_VIRTUAL_HOST_PORT${CYAN}]:${NORMAL} "
 	read -e SERVICE_URL
 	if [ -z "$SERVICE_URL" ];then
 		SERVICE_URL=$PROTOCOL://$KALTURA_FULL_VIRTUAL_HOST_NAME
@@ -252,12 +253,14 @@ elif [ "$CONFIG_CHOICE" = 0 ];then
 	enable_apps_conf $KALTURA_APACHE_CONFD
 	enable_admin_conf $KALTURA_APACHE_CONFD
 else
-	CONFIG_CHOICE=0
+	enable_apps_conf $KALTURA_APACHE_CONFD
+	enable_admin_conf $KALTURA_APACHE_CONFD
 fi
 
 # cronjobs:
 ln -sf $APP_DIR/configurations/cron/api /etc/cron.d/kaltura-api
-ln -sf $APP_DIR/configurations/cron/cleanup /etc/cron.d/kaltura-cleanup
+# currently causing issues, commenting
+#ln -sf $APP_DIR/configurations/cron/cleanup /etc/cron.d/kaltura-cleanup
 
 # logrotate:
 ln -sf $APP_DIR/configurations/logrotate/kaltura_apache /etc/logrotate.d/ 
@@ -270,6 +273,7 @@ find $BASE_DIR/app/cache/ $BASE_DIR/log -type d -exec chmod 775 {} \;
 find $BASE_DIR/app/cache/ $BASE_DIR/log -type f -exec chmod 664 {} \; 
 chown -R kaltura.apache $BASE_DIR/app/cache/ $BASE_DIR/log
 service httpd restart
+chkconfig httpd on
 ln -sf $BASE_DIR/app/configurations/monit/monit.avail/httpd.rc $BASE_DIR/app/configurations/monit/monit.d/enabled.httpd.rc
 ln -sf $BASE_DIR/app/configurations/monit/monit.avail/memcached.rc $BASE_DIR/app/configurations/monit/monit.d/enabled.memcached.rc
 /etc/init.d/kaltura-monit restart
@@ -278,9 +282,16 @@ ln -sf $BASE_DIR/app/configurations/monit/monit.avail/memcached.rc $BASE_DIR/app
 	if [ $? -eq 0 ];then
 		if [ -r $BASE_DIR/apps/studio/`rpm -qa kaltura-html5-studio --queryformat %{version}`/studio.ini ];then
 			php $BASE_DIR/app/deployment/uiconf/deploy_v2.php --ini=$BASE_DIR/apps/studio/`rpm -qa kaltura-html5-studio --queryformat %{version}`/studio.ini >> /dev/null
+			sed -i "s@^\(studio_version\s*=\)\(.*\)@\1 `rpm -qa kaltura-html5-studio --queryformat %{version}`@g" -i $BASE_DIR/app/configurations/base.ini
 		fi
-	php $BASE_DIR/app/deployment/uiconf/deploy_v2.php --ini=$BASE_DIR/web/flash/kmc/`rpm -qa kaltura-kmc --queryformat %{version}`/config.ini >> /dev/null
-
+	# we can't use rpm -q kaltura-kmc because this node may not be the one where we installed the KMC RPM on, as it resides in the web dir and does not need to be installed on all front nodes.
+		KMC_PATH=`ls -ld $BASE_DIR/web/flash/kmc/v*|awk -F " " '{print $NF}' |tail -1`
+		ln -sf $KMC_PATH/uiconf/kaltura/kmc  $BASE_DIR/web/content/uiconf/kaltura
+		php $BASE_DIR/app/deployment/uiconf/deploy_v2.php --ini=$KMC_PATH/config.ini >> /dev/null
+		HTML5_PATH=`ls -ld $BASE_DIR/web/html5/html5lib/v*|awk -F " " '{print $NF}' |tail -1`
+		sed -i "s@^\(html5_version\s*=\)\(.*\)@\1 `rpm -qa kaltura-html5lib --queryformat %{version}`@g" -i $BASE_DIR/app/configurations/base.ini
+		# https://github.com/kaltura/mwEmbed/issues/574
+		# find $BASE_DIR/web/html5/html5lib/ -type f -exec sed -i "s@http://cdnapi.kaltura.com@$SERVICE_URL@g" {} \;
 	fi
 	trap 'my_trap_handler ${LINENO} ${$?}' ERR
 send_install_becon `basename $0` $ZONE install_success 

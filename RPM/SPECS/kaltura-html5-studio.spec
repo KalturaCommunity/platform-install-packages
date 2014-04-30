@@ -2,7 +2,7 @@
 
 Summary: Kaltura Open Source Video Platform 
 Name: kaltura-html5-studio
-Version: v0.9
+Version: v0.9.7
 Release: 1 
 License: AGPLv3+
 Group: Server/Platform 
@@ -51,6 +51,34 @@ rm -rf %{buildroot}
 %{prefix}/apps/studio/%{version}
 
 %changelog
+* Thu Apr 24 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v0.9.7-1
+- SUP-1805 - Studio V2 features - logo plugin
+- SUP-1808 - Studio V2 features - Info plugin
+- SUP-1928 - Studio V2 features - Watched color selector
+
+* Sun Apr 6 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v0.9.6-1
+- FEC-1166 - Player Studio "does not support IE8 message" 
+- FEC-1163 - Player studio gives absolute http urls for players, breaks HTTPS
+- FEC-1162 - Can't scroll in player list in Universal studio
+- FEC-1157 - Studio Duplicate should not require up-to-date player 
+- FEC-1155 - Studio search is cut off in firefox 
+
+* Tue Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v0.9.4-1
+- Navigation menu added
+- FEC-1097 Default value is missing in L&F ( title label)
+- FEC-1116 Flash Tabs no longer display UI after clicking on Studio in Firefox
+- FEC-1112 Bumper is not playing while adding in v2 studio
+- FEC-1018 Performance issue on IE8
+- FEC-893 Cache issue with new players in P&E
+
+
+
+* Fri Mar 14 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v0.9.2-1
+- IE8 support
+- FEC-883 vast UI
+- FEC-1073 various UI issues with shlomit & michael
+- FEC-995 Support HTML Companions ads vast default config.
+
 * Sun Feb 23 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v0.9-1
 - Fixes:  
     FEC-1008 Unable to Update player in IE9

@@ -1,8 +1,7 @@
-%define kmc_login_version v1.2.3
 %define prefix /opt/kaltura
 Name:	kaltura-kmc	
-Version: v5.37.12
-Release: 2 
+Version: v5.37.17
+Release: 4
 Summary: Kaltura Management Console
 
 Group: System Management	
@@ -11,6 +10,7 @@ URL: http://kaltura.org
 Source0: %{name}-%{version}.tar.bz2
 Source1: kmc_config.ini
 Source2: kmc_doc.zip
+Source3: KMC_User_Manual.pdf
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
 
@@ -36,20 +36,32 @@ unzip %{SOURCE2}
 
 %build
 %post
-ls -sf %{prefix}/web/flash/kmc/%{version}/uiconf/kaltura/kmc/appstudio %{prefix}/web/content/uiconf
-ln -sf %{prefix}/web/flash/kmc/%{version}/uiconf/kaltura/kmc %{prefix}/web/content/uiconf/kaltura/kmc
-if [ -r "%{prefix}/app/configurations/local.ini" -a -r "%{prefix}/app/configurations/system.ini" ];then
-	php %{prefix}/app/deployment/uiconf/deploy_v2.php --ini=%{prefix}/web/flash/kmc/%{version}/config.ini >> %{prefix}/log/deploy_v2.log  2>&1
+if [ -L %{prefix}/web/content/uiconf ];then
+	rm %{prefix}/web/content/uiconf
+fi
+# remove link and resym.
+if [ -L %{prefix}/web/content/uiconf/kaltura/kmc ];then
+	rm %{prefix}/web/content/uiconf/kaltura/kmc
 fi
 
+ls -sf %{prefix}/web/flash/kmc/%{version}/uiconf/kaltura/kmc/appstudio %{prefix}/web/content/uiconf 2>/dev/null
+ln -sf %{prefix}/web/flash/kmc/%{version}/uiconf/kaltura/kmc %{prefix}/web/content/uiconf/kaltura/ 2>/dev/null
+#if [ -r "%{prefix}/app/configurations/local.ini" -a -r "%{prefix}/app/configurations/system.ini" ];then
+#	php %{prefix}/app/deployment/uiconf/deploy_v2.php --ini=%{prefix}/web/flash/kmc/%{version}/config.ini >> %{prefix}/log/deploy_v2.log  2>&1
+#fi
+
 %install
-mkdir -p $RPM_BUILD_ROOT%{prefix}/web/flash/kmc/login $RPM_BUILD_ROOT%{prefix}/app/alpha/web/lib
+mkdir -p $RPM_BUILD_ROOT%{prefix}/web/flash/kmc/login $RPM_BUILD_ROOT%{prefix}/app/alpha/web/lib $RPM_BUILD_ROOT%{prefix}/web/content/docs/pdf
 #$RPM_BUILD_ROOT%{prefix}/web/content/uiconf/kaltura/kmc
 mv kmc-docs-master/pdf $RPM_BUILD_ROOT%{prefix}/app/alpha/web/lib/ 
+cp -r %{_builddir}/%{name}-%{version}/kmc-docs-master/* $RPM_BUILD_ROOT%{prefix}/web/content/docs/
 mv %{_builddir}/%{name}-%{version}/login/%{kmc_login_version} $RPM_BUILD_ROOT%{prefix}/web/flash/kmc/login/ 
-cp -r %{_builddir}/%{name}-%{version} $RPM_BUILD_ROOT/%{prefix}/web/flash/kmc/%{version}
+mkdir $RPM_BUILD_ROOT%{prefix}/web/flash/kmc/%{version}
+cp -r %{_builddir}/%{name}-%{version}/%{version}/* $RPM_BUILD_ROOT/%{prefix}/web/flash/kmc/%{version}/
+mv %{_builddir}/%{name}-%{version}/uiconf $RPM_BUILD_ROOT%{prefix}/web/flash/kmc/%{version}/
 #cp -r $RPM_BUILD_ROOT/%{prefix}/web/flash/kmc/%{version}/uiconf/kaltura/kmc/* $RPM_BUILD_ROOT%{prefix}/web/content/uiconf/kaltura/kmc/
 cp %{SOURCE1} $RPM_BUILD_ROOT/%{prefix}/web/flash/kmc/%{version}/config.ini
+cp %{SOURCE3} $RPM_BUILD_ROOT%{prefix}/web/content/docs/pdf
 
 %preun
 #if [ "$1" = 0 ] ; then
@@ -62,12 +74,34 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{prefix}/web/flash/kmc
+%doc %{prefix}/web/content/docs/
 %doc %{prefix}/app/alpha/web/lib/pdf/*
 #%{prefix}/web/content/uiconf/kaltura/kmc
 %config %{prefix}/web/flash/kmc/%{version}/config.ini
 
 
 %changelog
+* Sat Apr 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v5.37.17-3
+- Bounce KMC and HTML5lib vers in config.ini.
+
+* Thu Apr 24 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v5.37.17-1
+- PLAT-1242 - Uploading a "m4a" file from desktop - the file media type is not automatically chosen
+- PLAT-1265 - KMC online guide broken link on submitbulkoptions.htm
+
+* Sun Apr 6 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v5.37.16-1
+- Live Reports in Analytics (phase 0)
+- Legacy embed code removed from Preview & Embed page for Players falling back to HTML5 v2
+- SUP-1713 - Analytics categories filter is not needed 
+- FEC-1131 - When only universal studio is enabled for partner - the main studio menu is not displayed at all in KMC 
+
+* Wed Mar 26 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v5.37.14-3
+- kmc_config.ini updated with new kmc ver.
+
+* Tue Mar 25 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v5.37.14-1
+- SUP-1581 - Remix feature is exposed to customers in Old KDP templates
+- KMC - After closing the "Support" page, the KMC is not usable
+- PLAT-1038 - Closing the "Preview & Embed" page is causing a change in the KMC's layout
+
 * Sun Mar 9 2014 Jess Portnoy <jess.portnoy@kaltura.com> - v5.37.12-1
 - Upgrade to 5.37.12, fixes:
   SUP-1634 - KMC will not alert when the user is uploading a file that is larger than 2GB using upload from desktop 
