@@ -205,7 +205,7 @@ Once the configuration phase is done, you may wish to run the sanity tests, for 
 
 You can now record a video using KMC->Upload->Record from Webcam.
 
-# Upgrade Kaltura 
+## Upgrade Kaltura 
 *This will only work if the initial install was using this packages based install, it will not work for old Kaltura deployments using the PHP installers*
 ```bash
 yum clean all
@@ -221,7 +221,7 @@ Once the upgrade completes, please run:
 ```
 To upgrade your DB schema.
 
-# Remove Kaltura
+## Remove Kaltura
 Use this in cases where you want to clear the database and start from fresh.
 ```bash
 /opt/kaltura/bin/kaltura-drop-db.sh
@@ -230,13 +230,13 @@ yum remove "*kaltura*"
 rm -rf /opt/kaltura
 ```
 
-# Troubleshooting
+## Troubleshooting
 
-# Additional Information
+## Additional Information
 * Please review the [frequently answered questions](https://github.com/kaltura/platform-install-packages/blob/master/doc/kaltura-packages-faq.md) document for general help before posting to the forums or issue queue.
 * This guide describes the installation and upgrade of an all-in-one machine where all the Kaltura components are installed on the same server. For cluster deployments, please refer to [cluster deployment document](http://bit.ly/kipp-cluster-yum), or [Deploying Kaltura using Opscode Chef](https://github.com/kaltura/platform-install-packages/blob/master/doc/rpm-chef-cluster-deployment.md).
 * To learn about monitoring, please refer to [configuring platform monitors](http://bit.ly/kipp-monitoring).
-* Testers using virtualization: [@DBezemer](https://github.com/DBezemer) created a basic CentOS template virtual server vailable here in OVF format: https://www.dropbox.com/s/luai7sk8nmihrkx/20140306_CentOS-base.zip
+* Testers using virtualization: [@DBezemer](https://github.com/DBezemer) created a basic CentOS 6.4 template virtual server vailable here in OVF format: https://www.dropbox.com/s/luai7sk8nmihrkx/20140306_CentOS-base.zip
 * Alternatively you can find VMWare images at - http://www.thoughtpolice.co.uk/vmware/ --> Make sure to only use compatible OS images; either RedHat or CentOS 5.n, 6.n or FedoraCore 18+.
 * Two working solutions to the AWS EC2 email limitations are:
 * *Using SendGrid as your mail service ([setting up ec2 with Sendgrid and postfix](http://www.zoharbabin.com/configure-ssmtp-or-postfix-to-send-email-via-sendgrid-on-centos-6-3-ec2)).
