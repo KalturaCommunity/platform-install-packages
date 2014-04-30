@@ -7,7 +7,7 @@ This guide describes RPM installation of an all-in-one Kaltura server and applie
 #### Table of Contents
 [Non-SSL Step-by-step Installation](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#non-ssl-step-by-step-installation)
 
-[SSL Step-by-step Installation]
+[SSL Step-by-step Installation](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#ssl-step-by-step-installation)
 
 [Upgrade Process]
 
@@ -19,12 +19,12 @@ This guide describes RPM installation of an all-in-one Kaltura server and applie
 
 ## Non-SSL Step-by-step Installation
 
-##### Pre-Install notes
+### Pre-Install notes
 * This install guides assumes that you did a clean, basic install of one of the support OS's in 64bit architecture
 * When installing, you will be prompted for each server's resolvable hostname. Note that it is crucial that all host names will be resolvable by other servers in the cluster (and outside the cluster for front machines). Before installing, verify that your /etc/hosts file is properly configured and that all Kaltura server hostnames are resolvable in your network.
 * Before you begin, make sure you're logged in as the system root. Root access is required to install Kaltura, and you should execute ```sudo su``` to make sure that you are indeed root.
 
-##### Firewall requirements
+#### Firewall requirements
 Kaltura requires certain ports to be open for proper operation. [See the list of required open ports](https://github.com/kaltura/platform-install-packages/blob/master/doc/kaltura-required-ports.md).   
 If you're just testing and don't mind an open system, you can use the below to disbale iptables altogether:
 ```bash
@@ -32,7 +32,7 @@ iptables -F
 service iptables stop
 chkconfig iptables off
 ```
-##### Disable SELinux - REQUIRED (currently Kaltura can't run properly with SELinux)
+#### Disable SELinux - REQUIRED (currently Kaltura can't run properly with SELinux)
 ```bash 
 setenforce permissive
 # To verify SELinux will not revert to enabled next restart:
@@ -40,14 +40,15 @@ setenforce permissive
 # Set SELINUX=permissive
 # Save /etc/selinux/config
 ```
-##### Install the Kaltura install repository 
+
+### Start of Kaltura installation
+This section is a step-by-step guide of a Kaltura installation without SSL.
+
+#### Install the Kaltura install repository 
 
 ```bash
 rpm -ihv http://installrepo.kaltura.org/releases/kaltura-release.noarch.rpm
 ```
-
-### Start of Kaltura installation
-This section is a step-by-step guide of a Kaltura installation without SSL.
 
 #### MySQL
 Please note that currently, only MySQL 5.1 is supported, we recommend using the official package supplied by the RHEL/CentOS repos which is currently 5.1.73.
@@ -62,11 +63,6 @@ chkconfig mysqld on
 
 **Make sure to answer YES for all steps in the `mysql_secure_install` install, and follow through all the mysql install questions before continuing further.    
 Failing to properly run `mysql_secure_install` will cause the kaltura mysql user to run without proper permissions to access your mysql DB, and require you to start over again.
-
-Configure MySQL with the required Kaltura Settings
-```bash
-/opt/kaltura/bin/kaltura-mysql-settings.sh
-```
 
 #### Mail Server
 If your machine doesn't have postfix email configured before the Kaltura install, you will not receive emails from the install system nor publisher account activation mails.
@@ -86,6 +82,11 @@ yum clean all
 yum install kaltura-server
 ```
 
+Configure MySQL with the required Kaltura Settings
+```bash
+/opt/kaltura/bin/kaltura-mysql-settings.sh
+```
+
 Start required service and configure them to run at boot:
 ```bash
 service memcached restart
@@ -101,14 +102,14 @@ chkconfig ntpd on
 
 The below is a sample question answer format, replace the input with your own details:
 
+tbd
 
 
 
 
 
-
-
-##### Note about SSL certificates
+## SSL Step-by-step Installation
+### Note about SSL certificates
 
 You can run Kaltura with or without SSL (state the correct protocol and certificates during the installation).  
 It is recommended that you use a properly signed certificate and avoid self-signed certificates due to limitations of various browsers in properly loading websites using self-signed certificates.    
