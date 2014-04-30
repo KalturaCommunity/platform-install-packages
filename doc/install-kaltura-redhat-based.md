@@ -5,12 +5,17 @@ This guide describes RPM installation of an all-in-one Kaltura server and applie
 [Kaltura Inc.](http://corp.kaltura.com) also provides commercial solutions and services including pro-active platform monitoring, applications, SLA, 24/7 support and professional services. If you're looking for a commercially supported video platform  with integrations to commercial encoders, streaming servers, eCDN, DRM and more - Start a [Free Trial of the Kaltura.com Hosted Platform](http://corp.kaltura.com/free-trial) or learn more about [Kaltura' Commercial OnPrem Edition™](http://corp.kaltura.com/Deployment-Options/Kaltura-On-Prem-Edition). For existing RPM based users, Kaltura offers commercial upgrade options.
 
 #### Table of Contents
-[Non-SSL Step-by-step Installation]
+[Non-SSL Step-by-step Installation](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#non-ssl-step-by-step-installation)
+
 [SSL Step-by-step Installation]
+
 [Upgrade Process]
+
 [Remove Process]
+
 [Troubleshooting]
-[Additional Information]
+
+[Additional Information](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#additional-information)
 
 ## Non-SSL Step-by-step Installation
 
