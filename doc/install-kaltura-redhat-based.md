@@ -9,11 +9,11 @@ This guide describes RPM installation of an all-in-one Kaltura server and applie
 
 [SSL Step-by-step Installation](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#ssl-step-by-step-installation)
 
-[Upgrade Process]
+[Upgrade Kaltura](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#upgrade-kaltura)
 
-[Remove Process]
+[Remove Kaltura](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#remove-kaltura)
 
-[Troubleshooting]
+[Troubleshooting](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#troubleshooting)
 
 [Additional Information](https://github.com/DBezemer/platform-install-packages/blob/master/doc/install-kaltura-redhat-based.md#additional-information)
 
@@ -95,7 +95,7 @@ chkconfig memcached on
 chkconfig ntpd on
 ```
 
-##### Configure the Kaltura installation
+### Configure the Kaltura installation
 ```bash
 /opt/kaltura/bin/kaltura-config-all.sh
 ```
@@ -205,7 +205,7 @@ Once the configuration phase is done, you may wish to run the sanity tests, for 
 
 You can now record a video using KMC->Upload->Record from Webcam.
 
-## Upgrade an existing Kaltura installation 
+# Upgrade Kaltura 
 *This will only work if the initial install was using this packages based install, it will not work for old Kaltura deployments using the PHP installers*
 ```bash
 yum clean all
@@ -221,27 +221,18 @@ Once the upgrade completes, please run:
 ```
 To upgrade your DB schema.
 
-## Fresh Database Installation
+# Remove Kaltura
 Use this in cases where you want to clear the database and start from fresh.
 ```bash
 /opt/kaltura/bin/kaltura-drop-db.sh
-/opt/kaltura/bin/kaltura-config-all.sh [answers-file-path]
-```
-
-## Complete REinstall 
-This will completely remove Kaltura, then download and install from scratch.
-```bash
 /opt/kaltura/bin/kaltura-drop-db.sh
 yum remove "*kaltura*"
 rm -rf /opt/kaltura
-rpm -ihv http://installrepo.kaltura.org/releases/kaltura-release.noarch.rpm
-yum clean all
-yum install kaltura-server
-/opt/kaltura/bin/kaltura-config-all.sh [answers-file-path]
 ```
-*Note that the repository URL will change soon, this is just the test repository*
 
-##### Additional Information
+# Troubleshooting
+
+# Additional Information
 * Please review the [frequently answered questions](https://github.com/kaltura/platform-install-packages/blob/master/doc/kaltura-packages-faq.md) document for general help before posting to the forums or issue queue.
 * This guide describes the installation and upgrade of an all-in-one machine where all the Kaltura components are installed on the same server. For cluster deployments, please refer to [cluster deployment document](http://bit.ly/kipp-cluster-yum), or [Deploying Kaltura using Opscode Chef](https://github.com/kaltura/platform-install-packages/blob/master/doc/rpm-chef-cluster-deployment.md).
 * To learn about monitoring, please refer to [configuring platform monitors](http://bit.ly/kipp-monitoring).
