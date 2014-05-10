@@ -103,32 +103,36 @@ chkconfig ntpd on
 The below is a sample question answer format, replace the input with your own details:
 
 ```bash
-[Email\NO]: <your email address>
-CDN hostname [kalrpm.lcl]: <your hostname>
-Apache virtual hostname [kalrpm.lcl]: <your hostname>
-Which port will this Vhost listen on [80]?: <80>
-DB hostname [127.0.0.1]: <127.0.0.1>
-DB port [3306]: <3306>
-MySQL super user [this is only for setting the kaltura user passwd and WILL NOT be used with the application]: <root>
-MySQL super user passwd [this is only for setting the kaltura user passwd and WILL NOT be used with the application]: <your root password>
-Analytics DB hostname [127.0.0.1]: <127.0.0.1>
-Analytics DB port [3306]: <3306>
-Sphinx hostname [127.0.0.1]: <127.0.0.1>
-Media Streaming Server host [kalrpm.lcl]: <your hostname>
-Secondary Sphinx hostname: [leave empty if none] <empty>
-Service URL [http://kalrpm.lcl:80]: <http://your hostname:80>
-Kaltura Admin user (email address): <your email address>
-Admin user login password (must be minimum 8 chars and include at least one of each: upper-case, lower-case, number and a special character): <your kaltura admin password>
-Confirm passwd: <your kaltura admin password>
-Your time zone [see http://php.net/date.timezone], or press enter for [Europe/Amsterdam]: <your timezone>
-How would you like to name your system (this name will show as the From field in emails sent by the system) [Kaltura Video Platform]? <your preferred system name>
-Your website Contact Us URL [http://corp.kaltura.com/company/contact-us]: <your contact URL>
-'Contact us' phone number [+1 800 871 5224]? <your phone numer>
+[Email\NO]: "<your email address>"
+CDN hostname [kalrpm.lcl]: "<your hostname>"
+Apache virtual hostname [kalrpm.lcl]: "<your hostname>"
+Which port will this Vhost listen on [80]?: "<80>"
 
-Is your Apache working with SSL?[Y/n] <n>
-It is recommended that you do work using HTTPs. Would you like to continue anyway?[N/y] <y>
-Which port will this Vhost listen on? [80] <80>
-Please select one of the following options [0]: <0>
+DB hostname [127.0.0.1]: "<127.0.0.1>"
+DB port [3306]: "<3306>"
+MySQL super user [this is only for setting the kaltura user passwd and WILL NOT be used with the application]: "<root>"
+MySQL super user passwd [this is only for setting the kaltura user passwd and WILL NOT be used with the application]: "<your root password>"
+Analytics DB hostname [127.0.0.1]: "<127.0.0.1>"
+Analytics DB port [3306]: "<3306>"
+Sphinx hostname [127.0.0.1]: "<127.0.0.1>"
+
+Media Streaming Server host [kalrpm.lcl]: "<your hostname>"
+Secondary Sphinx hostname: [leave empty if none] "<empty>"
+Service URL [http://kalrpm.lcl:80]: "<http://your hostname:80>"
+
+Kaltura Admin user (email address): "<your email address>"
+Admin user login password (must be minimum 8 chars and include at least one of each: upper-case, lower-case, number and a special character): "<your kaltura admin password>"
+Confirm passwd: "<your kaltura admin password>"
+
+Your time zone [see http://php.net/date.timezone], or press enter for [Europe/Amsterdam]: "<your timezone>"
+How would you like to name your system (this name will show as the From field in emails sent by the system) [Kaltura Video Platform]? "<your preferred system name>"
+Your website Contact Us URL [http://corp.kaltura.com/company/contact-us]: "<your contact URL>"
+'Contact us' phone number [+1 800 871 5224]? "<your phone numer>"
+
+Is your Apache working with SSL?[Y/n] "<n>"
+It is recommended that you do work using HTTPs. Would you like to continue anyway?[N/y] "<y>"
+Which port will this Vhost listen on? [80] "<80>"
+Please select one of the following options [0]: "<0>"
 ```
 
 Your install will now be complete.
