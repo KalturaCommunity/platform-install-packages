@@ -41,16 +41,16 @@ setenforce permissive
 # Save /etc/selinux/config
 ```
 
-### Start of Kaltura installation
+### No-SSL Kaltura Installation
 This section is a step-by-step guide of a Kaltura installation without SSL.
 
-#### Install the Kaltura install repository 
+#### Setup the Kaltura RPM repository
 
 ```bash
 rpm -ihv http://installrepo.kaltura.org/releases/kaltura-release.noarch.rpm
 ```
 
-#### MySQL
+#### Install and Configure MySQL
 Please note that currently, only MySQL 5.1 is supported, we recommend using the official package supplied by the RHEL/CentOS repos which is currently 5.1.73.
 
 Install MySQL and start and configure it:
@@ -64,7 +64,7 @@ chkconfig mysqld on
 **Make sure to answer YES for all steps in the `mysql_secure_install` install, and follow through all the mysql install questions before continuing further.    
 Failing to properly run `mysql_secure_install` will cause the kaltura mysql user to run without proper permissions to access your mysql DB, and require you to start over again.
 
-#### Mail Server
+#### Install and Configure a Mail Server
 If your machine doesn't have postfix email configured before the Kaltura install, you will not receive emails from the install system nor publisher account activation mails.
 
 If postfix runs without further configuration starting it is sufficient to make Kaltura work.
@@ -74,7 +74,7 @@ service postfix restart
 
 If you are using Amazon Web Services (AWS) please note that by default EC2 machines are blocked from sending email via port 25. For more information see [this thread on AWS forums](https://forums.aws.amazon.com/message.jspa?messageID=317525#317525).  
 
-##### Install Kaltura Server
+##### Install and Configure the Kaltura Server
 
 Install the basic Kaltura Packages:
 ```bash
@@ -135,10 +135,11 @@ Which port will this Vhost listen on? [80] "<80>"
 Please select one of the following options [0]: "<0>"
 ```
 
-Your install will now be complete.
+**Your install is now complete.**
 
 ## SSL Step-by-step Installation
-### Note about SSL certificates
+
+### Before you begin, know this about SSL Certificates
 
 You can run Kaltura with or without SSL (state the correct protocol and certificates during the installation).  
 It is recommended that you use a properly signed certificate and avoid self-signed certificates due to limitations of various browsers in properly loading websites using self-signed certificates.    
