@@ -32,14 +32,19 @@ iptables -F
 service iptables stop
 chkconfig iptables off
 ```
-#### Disable SELinux - REQUIRED (currently Kaltura can't run properly with SELinux)
+#### Disable SELinux - REQUIRED
+**Currently Kaltura doesn't properly support running with SELinux, things will break if you don't set it to permissive**.
+
+First run - 
 ```bash 
 setenforce permissive
-# To verify SELinux will not revert to enabled next restart:
-# Edit /etc/selinux/config
-# Set SELINUX=permissive
-# Save /etc/selinux/config
 ```
+
+To verify SELinux will not revert to enabled next restart:
+
+1. Edit the file `/etc/selinux/config`
+1. Verify or change the value of SELINUX to permissive: `SELINUX=permissive`
+1. Save the file `/etc/selinux/config`
 
 ### Start of Kaltura installation
 This section is a step-by-step guide of a Kaltura installation without SSL.
